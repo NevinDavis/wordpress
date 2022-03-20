@@ -1,0 +1,59 @@
+version: '3'
+services:
+  # WordPress container - runs on port 8000
+  wordpress:
+    image: wordpress
+    container_name: wordpress
+    volumes:
+      - ./data/wordpress/:/var/www/html/
+    depends_on:
+      - database
+    environment:
+      - TIME_ZONE=Europe/London
+    links:
+      - database
+    ports:
+      - 8000:80
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '5'
+
+  # Database container - runs on port 6033
+  database:
+    container_name: database
+    image: mysql
+    volumes:
+      - ./data/database:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE_NAME}
+      MYSQL_USER: ${MYSQL_USERNAME}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_TCP_PORT: 3306
+    ports:
+      - 6033:3306
+    restart: always
+
+  # phpMyAdmin container - runs on port 8001
+  phpMyAdmin:
+    container_name: phpMyAdmin
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - database
+    environment:
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      PMA_HOST: database
+      MYSQL_USER: ${MYSQL_USERNAME}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      PMA_USER: ${MYSQL_USERNAME}
+      PMA_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    links:
+      - database
+    ports:
+      - 8001:80
+    restart: always
